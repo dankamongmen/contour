@@ -1161,6 +1161,50 @@ void TerminalWidget::updateMinimumSize()
     auto const minSize = gridMetrics().cellSize * MinimumGridSize;
     setMinimumSize(minSize.width, minSize.height);
 }
+
+optional<terminal::Image> TerminalWidget::decodeImage(crispy::span<uint8_t> _imageData)
+{
+    QImage image;
+    image.loadFromData(_imageData.begin(), _imageData.size());
+
+    qDebug() << "decodeImage()" << image.format();
+    if (image.hasAlphaChannel() && image.format() != QImage::Format_ARGB32)
+        image = image.convertToFormat(QImage::Format_ARGB32);
+    else
+        image = image.convertToFormat(QImage::Format_RGB888);
+    qDebug() << "|> decodeImage()" << image.format()
+        << image.sizeInBytes()
+        << image.size()
+        ;
+
+    static terminal::Image::Id nextImageId = 0;
+
+    terminal::Image::Data pixels;
+    auto* p = &pixels[0];
+    pixels.resize(image.bytesPerLine() * image.height());
+    for (int i = 0; i < image.height(); ++i)
+    {
+        memcpy(p, image.constScanLine(i), image.bytesPerLine());
+        p += image.bytesPerLine();
+    }
+
+    terminal::ImageFormat format = terminal::ImageFormat::RGBA;
+    switch (image.format())
+    {
+        case QImage::Format_RGBA8888:
+            format = terminal::ImageFormat::RGBA;
+            break;
+        case QImage::Format_RGB888:
+            format = terminal::ImageFormat::RGB;
+            break;
+        default:
+            return nullopt;
+    }
+    crispy::Size size{image.width(), image.height()};
+
+    auto img = terminal::Image(nextImageId++, format, std::move(pixels), size);
+    return {std::move(img)};
+}
 // }}}
 
 } // namespace contour

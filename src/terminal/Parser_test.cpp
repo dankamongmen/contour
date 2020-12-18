@@ -12,9 +12,11 @@
  * limitations under the License.
  */
 #include <terminal/Parser.h>
+#include <string_view>
 #include <catch2/catch.hpp>
 
 using namespace std;
+using namespace std::string_view_literals;
 using namespace terminal;
 
 class MockParserEvents : public terminal::BasicParserEvents {
@@ -30,7 +32,7 @@ TEST_CASE("Parser.utf8_single", "[Parser]")
     MockParserEvents textListener;
     auto p = parser::Parser(textListener);
 
-    p.parseFragment("\xC3\xB6");  // ö
+    p.parseFragment("\xC3\xB6"sv);  // ö
 
     REQUIRE(textListener.text.size() == 1);
     CHECK(0xF6 == static_cast<unsigned>(textListener.text.at(0)));

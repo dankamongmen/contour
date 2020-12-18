@@ -66,6 +66,11 @@ public:
     static QSurfaceFormat surfaceFormat();
     QSize minimumSizeHint() const override;
     QSize sizeHint() const override;
+
+    std::optional<terminal::Image> decodeImage(crispy::span<uint8_t> _imageData);
+
+    int pointsToPixels(text::font_size _fontSize) const noexcept;
+
     void initializeGL() override;
     void resizeGL(int _width, int _height) override;
     void paintGL() override;
